@@ -148,10 +148,10 @@ def main():
         | Layer | Source | Coverage Range | Key Benefit |
         |-------|--------|----------------|-------------|
         | 1 | Municipal Reserves | First $50M | Local tax base stabilization |
-        | 2 | State Risk Pools | $50M-$250M | Regional diversification |
-        | 3 | Catastrophe Bonds | $250M-$1B | Locked-in capital commitments |
-        | 4 | Reinsurance Markets | $1B-$5B | Global risk distribution |
-        | 5 | Federal Backstop | >$5B | Crisis-level market assurance |
+        | 2 | State Risk Pools | \\$50M–\\$250M | Regional diversification |
+        | 3 | Catastrophe Bonds | \\$250M–\\$1B | Locked-in capital commitments |
+        | 4 | Reinsurance Markets | \\$1B–\\$5B | Global risk distribution |
+        | 5 | Federal Backstop | >\\$5B | Crisis-level market assurance |
         
         This contrasts with the traditional model where middle layers are largely absent, 
         leaving a "vast middle ground unfilled" between municipal reserves and federal appropriations.
