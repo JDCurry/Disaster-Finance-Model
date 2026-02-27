@@ -24,11 +24,11 @@ from disaster_generator import DisasterEvent, DisasterType
 
 class FundingLayer(Enum):
     """The five layers of the proposed financing structure."""
-    MUNICIPAL_RESERVES = 1
-    STATE_RISK_POOL = 2
-    CAT_BONDS = 3
-    REINSURANCE = 4
-    FEDERAL_BACKSTOP = 5
+    MunicipalReserves = "Municipal Reserves"
+    StateRiskPool = "State Risk Pool"
+    CatBonds = "Cat Bonds"
+    Reinsurance = "Reinsurance"
+    FederalBackstop = "Federal Backstop"
 
 
 @dataclass
@@ -136,7 +136,7 @@ class FundingWaterfall:
     # Default layer configurations based on Table 1 from paper
     DEFAULT_LAYERS = [
         LayerConfiguration(
-            layer=FundingLayer.MUNICIPAL_RESERVES,
+            layer=FundingLayer.MunicipalReserves,
             name="Municipal Reserves",
             floor=0,
             ceiling=50,           # First $50M
@@ -148,7 +148,7 @@ class FundingWaterfall:
             availability_probability=0.95,  # May be depleted
         ),
         LayerConfiguration(
-            layer=FundingLayer.STATE_RISK_POOL,
+            layer=FundingLayer.StateRiskPool,
             name="State Risk Pool",
             floor=50,
             ceiling=250,          # Next $200M
@@ -160,8 +160,8 @@ class FundingWaterfall:
             availability_probability=0.92,
         ),
         LayerConfiguration(
-            layer=FundingLayer.CAT_BONDS,
-            name="Catastrophe Bonds (AAA Tranche)",
+            layer=FundingLayer.CatBonds,
+            name="Cat Bonds",
             floor=250,
             ceiling=1000,         # $200M-$1B range
             capacity=750,
@@ -172,8 +172,8 @@ class FundingWaterfall:
             availability_probability=0.98,  # Contractually committed
         ),
         LayerConfiguration(
-            layer=FundingLayer.REINSURANCE,
-            name="Reinsurance Markets",
+            layer=FundingLayer.Reinsurance,
+            name="Reinsurance",
             floor=1000,
             ceiling=5000,         # $1B-$5B range
             capacity=4000,
@@ -184,7 +184,7 @@ class FundingWaterfall:
             availability_probability=0.90,  # Market conditions vary
         ),
         LayerConfiguration(
-            layer=FundingLayer.FEDERAL_BACKSTOP,
+            layer=FundingLayer.FederalBackstop,
             name="Federal Backstop",
             floor=5000,
             ceiling=float('inf'), # Unlimited (crisis-level)
@@ -344,7 +344,7 @@ class TraditionalFEMAModel:
         # Traditional model has gaps in middle layers
         self.layers = [
             LayerConfiguration(
-                layer=FundingLayer.MUNICIPAL_RESERVES,
+                layer=FundingLayer.MunicipalReserves,
                 name="Municipal Reserves",
                 floor=0,
                 ceiling=50,
@@ -355,7 +355,7 @@ class TraditionalFEMAModel:
             ),
             # Gap: No state pools, cat bonds, or reinsurance in traditional model
             LayerConfiguration(
-                layer=FundingLayer.FEDERAL_BACKSTOP,
+                layer=FundingLayer.FederalBackstop,
                 name="FEMA/Federal Appropriations",
                 floor=50,  # Everything above municipal goes to federal
                 ceiling=float('inf'),
