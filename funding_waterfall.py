@@ -308,10 +308,10 @@ class FundingWaterfall:
         return premiums
     
     def get_layer_summary(self) -> Dict[str, Dict]:
-        """Get summary statistics for each layer."""
+        """Get summary statistics for each layer, using human-readable names."""
         summary = {}
         for layer in self.layers:
-            summary[layer.name] = {
+            summary[layer.layer.value] = {
                 "floor": layer.floor,
                 "ceiling": layer.ceiling if layer.ceiling != float('inf') else "Unlimited",
                 "capacity": layer.capacity if layer.capacity != float('inf') else "Unlimited",

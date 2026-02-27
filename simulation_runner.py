@@ -267,9 +267,11 @@ class SimulationRunner:
                     
                     # Track layer utilization
                     for layer, amount in r.layer_utilization.items():
-                        layer_totals[layer.name] += amount
+                        # Use .value for display and dict keys
+                        key = layer.value if hasattr(layer, 'value') else str(layer)
+                        layer_totals[key] += amount
                         if amount > 0:
-                            layer_counts[layer.name] += 1
+                            layer_counts[key] += 1
                 
                 for r in fema_results:
                     all_fema_gaps.append(r.coverage_gap)
