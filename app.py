@@ -250,18 +250,21 @@ def main():
     seed = 42
     
     # Layer customization
-    st.sidebar.markdown("---")
-    st.sidebar.header("Layer Configuration")
+    # st.sidebar.markdown("---")
+    # st.sidebar.header("Layer Configuration")
+    # 
+    # customize_layers = st.sidebar.checkbox("Customize Layer Thresholds", value=False)
+    # 
+    # if customize_layers:
+    #     layer_1_cap = st.sidebar.number_input("Layer 1 (Municipal) Cap ($M)", value=50, min_value=10, max_value=200)
+    #     layer_2_cap = st.sidebar.number_input("Layer 2 (State Pool) Cap ($M)", value=250, min_value=100, max_value=500)
+    #     layer_3_cap = st.sidebar.number_input("Layer 3 (Cat Bonds) Cap ($M)", value=1000, min_value=500, max_value=2000)
+    #     layer_4_cap = st.sidebar.number_input("Layer 4 (Reinsurance) Cap ($M)", value=5000, min_value=2000, max_value=10000)
+    # else:
+    #     layer_1_cap, layer_2_cap, layer_3_cap, layer_4_cap = 50, 250, 1000, 5000
     
-    customize_layers = st.sidebar.checkbox("Customize Layer Thresholds", value=False)
-    
-    if customize_layers:
-        layer_1_cap = st.sidebar.number_input("Layer 1 (Municipal) Cap ($M)", value=50, min_value=10, max_value=200)
-        layer_2_cap = st.sidebar.number_input("Layer 2 (State Pool) Cap ($M)", value=250, min_value=100, max_value=500)
-        layer_3_cap = st.sidebar.number_input("Layer 3 (Cat Bonds) Cap ($M)", value=1000, min_value=500, max_value=2000)
-        layer_4_cap = st.sidebar.number_input("Layer 4 (Reinsurance) Cap ($M)", value=5000, min_value=2000, max_value=10000)
-    else:
-        layer_1_cap, layer_2_cap, layer_3_cap, layer_4_cap = 50, 250, 1000, 5000
+    # Default layer caps
+    layer_1_cap, layer_2_cap, layer_3_cap, layer_4_cap = 50, 250, 1000, 5000
     
     # Run simulation button
     run_button = st.sidebar.button("Run Simulation", type="primary", use_container_width=True)
