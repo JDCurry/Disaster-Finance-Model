@@ -238,13 +238,13 @@ def main():
         help="Number of simulation runs for statistical robustness"
     )
     
-    seed = st.sidebar.number_input(
-        "Random Seed (for reproducibility)",
-        min_value=0,
-        max_value=99999,
-        value=42,
-        help="Set to same value to reproduce results"
-    )
+    # seed = st.sidebar.number_input(
+    #     "Random Seed (for reproducibility)",
+    #     min_value=0,
+    #     max_value=99999,
+    #     value=42,
+    #     help="Set to same value to reproduce results"
+    # )
     
     # Layer customization
     st.sidebar.markdown("---")
