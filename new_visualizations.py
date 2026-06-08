@@ -562,13 +562,14 @@ def create_frequency_trend() -> go.Figure:
     events = [33, 57, 67, 131, 115]
     years_in_period = [10, 10, 10, 10, 5]
     avg_per_year = [e / y for e, y in zip(events, years_in_period)]
+    colors = ["#B5D4F4", "#85B7EB", "#378ADD", "#185FA5", "#E24B4A"]
 
     fig = go.Figure()
 
     fig.add_trace(go.Bar(
         x=decades,
         y=avg_per_year,
-        marker_color=["#B5D4F4", "#85B7EB", "#378ADD", "#185FA5", "#E24B4A"],
+        marker_color=colors,
         text=[f"{v:.1f}/yr" for v in avg_per_year],
         textposition="outside",
         textfont=dict(size=12),
@@ -581,28 +582,20 @@ def create_frequency_trend() -> go.Figure:
         customdata=events,
     ))
 
-    # Add trend line
-    x_numeric = list(range(len(decades)))
-    coeffs = np.polyfit(x_numeric, avg_per_year, 2)
-    trend_y = np.polyval(coeffs, np.linspace(0, len(decades) - 1, 50))
-
-    fig.add_trace(go.Scatter(
-        x=np.linspace(0, len(decades) - 1, 50),
-        y=trend_y,
-        mode="lines",
-        line=dict(color="#E24B4A", width=2, dash="dot"),
-        name="Trend",
-        showlegend=False,
-        hoverinfo="skip",
-    ))
-
     fig.update_layout(
         title=dict(
             text="Billion-Dollar Disaster Frequency Acceleration (1980–2024)",
             font=dict(size=16),
         ),
-        xaxis=dict(title="", tickvals=list(range(len(decades))), ticktext=decades),
-        yaxis=dict(title="Average Events per Year", gridcolor="rgba(128,128,128,0.15)"),
+        xaxis=dict(
+            title="",
+            categoryorder="array",
+            categoryarray=decades,
+        ),
+        yaxis=dict(
+            title="Average Events per Year",
+            gridcolor="rgba(128,128,128,0.15)",
+        ),
         height=380,
         showlegend=False,
         margin=dict(l=10, r=10, t=50, b=40),
