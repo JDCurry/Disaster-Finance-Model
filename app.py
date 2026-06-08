@@ -32,6 +32,15 @@ from funding_waterfall import (
 )
 from simulation_runner import SimulationRunner, generate_summary_report
 from noaa_data import NOAADataCalibrator, NOAA_SUMMARY_STATS, STATE_COST_DATA, REGIONAL_GROUPINGS
+from new_visualizations import (
+    create_choropleth,
+    create_sankey_comparison,
+    create_disbursement_timeline,
+    create_exceedance_curve,
+    create_frequency_trend,
+    EXCEEDANCE_PROFILES,
+    format_cost as viz_format_cost,
+)
 
 
 def format_currency(value_millions: float, decimals: int = 1) -> str:
@@ -306,11 +315,13 @@ def main():
         # Visualizations
         st.header("Detailed Analysis")
         
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
             "Layer Utilization", 
             "Loss Distribution", 
+            "Funding Flow",
+            "Disbursement Timeline",
+            "Geographic Risk Map",
             "Time Series",
-            "Waterfall Diagram",
             "NOAA Historical Data"
         ])
         
@@ -393,8 +404,152 @@ def main():
             col1.metric("Median Gap", format_currency(gap_pct['p50']))
             col2.metric("90th Percentile Gap", format_currency(gap_pct['p90']))
             col3.metric("99th Percentile Gap", format_currency(gap_pct['p99']))
+            
+            # Loss exceedance curve
+            st.markdown("---")
+            st.subheader("Loss Exceedance Curve")
+            st.caption(
+                "Probability of a single event exceeding a given loss threshold, "
+                "derived from log-normal severity distributions calibrated to NOAA NCEI data."
+            )
+            
+            exc_profiles = st.multiselect(
+                "Profiles to compare",
+                options=list(EXCEEDANCE_PROFILES.keys()),
+                default=[results.profile_name],
+                key="exc_profiles",
+            )
+            
+            if exc_profiles:
+                fig_exc = create_exceedance_curve(
+                    profiles_to_show=exc_profiles, seed=seed
+                )
+                st.plotly_chart(fig_exc, use_container_width=True)
         
         with tab3:
+            st.subheader("Funding Flow Comparison")
+            st.caption(
+                "How disaster losses flow through each model's funding layers. "
+                "Adjust the event size to see how the five-layer market model distributes risk "
+                "versus the two-layer traditional model."
+            )
+            
+            sankey_loss = st.slider(
+                "Event Loss ($M)",
+                min_value=100,
+                max_value=15000,
+                value=5000,
+                step=100,
+                format="$%dM",
+                key="sankey_loss",
+                help="Drag to see how different event sizes flow through each model"
+            )
+            
+            fig_sankey = create_sankey_comparison(loss_millions=sankey_loss)
+            st.plotly_chart(fig_sankey, use_container_width=True)
+            
+            # Also show the static five-layer structure diagram
+            with st.expander("Five-Layer Protection Structure (static view)"):
+                fig_waterfall = go.Figure()
+                layers_static = [
+                    ("Municipal Reserves", 0, 50, "#3b82f6"),
+                    ("State Risk Pool", 50, 250, "#8b5cf6"),
+                    ("Catastrophe Bonds", 250, 1000, "#06b6d4"),
+                    ("Reinsurance Markets", 1000, 5000, "#f59e0b"),
+                    ("Federal Backstop", 5000, 10000, "#ef4444"),
+                ]
+                for name, floor, ceiling, color in layers_static:
+                    fig_waterfall.add_trace(go.Bar(
+                        name=name,
+                        x=[name],
+                        y=[ceiling - floor],
+                        base=[floor],
+                        marker_color=color,
+                        text=[f"${floor}M - ${ceiling}M"],
+                        textposition="inside",
+                        hovertemplate=f"<b>{name}</b><br>Range: ${floor}M - ${ceiling}M<extra></extra>"
+                    ))
+                fig_waterfall.update_layout(
+                    title="Five-Layer Protection Structure",
+                    xaxis_title="Layer",
+                    yaxis_title="Coverage Range ($M)",
+                    yaxis_type="log",
+                    showlegend=False,
+                    height=450
+                )
+                st.plotly_chart(fig_waterfall, use_container_width=True)
+            
+            st.info(
+                "**Key insight:** The traditional model concentrates nearly all funding "
+                "on a single federal instrument. The market-based model distributes risk "
+                "across five contractually committed layers, filling the 'vast middle ground' "
+                "between local reserves and federal appropriations."
+            )
+        
+        with tab4:
+            st.subheader("Disbursement Timeline Comparison")
+            st.caption(
+                "How quickly does money reach disaster-affected communities? "
+                "The market model's parametric triggers and pre-committed capital "
+                "close the 18-day gap between local reserves and federal appropriations."
+            )
+            
+            timeline_loss = st.slider(
+                "Event Loss ($M)",
+                min_value=100,
+                max_value=10000,
+                value=2000,
+                step=100,
+                format="$%dM",
+                key="timeline_loss",
+                help="Drag to see timing for different event sizes"
+            )
+            
+            fig_timeline = create_disbursement_timeline(loss_millions=timeline_loss)
+            st.plotly_chart(fig_timeline, use_container_width=True)
+            
+            # Key timing metrics
+            st.markdown("---")
+            tcol1, tcol2, tcol3 = st.columns(3)
+            tcol1.metric("Cat Bond Trigger", "72 hours", help="Parametric triggers disburse within 72 hours of threshold breach")
+            tcol2.metric("FEMA PA Average", "21 days", help="Average FEMA Public Assistance disbursement timeline")
+            tcol3.metric("Time Saved", f"~{max(0, 21 - 3):.0f} days", delta="Per event (lower layers)", help="Days saved on lower-layer funding through market mechanisms")
+        
+        with tab5:
+            st.subheader("Geographic Risk Map")
+            st.caption(
+                "Cumulative billion-dollar disaster costs by state (1980–2024, CPI-adjusted). "
+                "Dashed outlines show the regional profiles available for simulation."
+            )
+            
+            # Hazard type filter
+            hazard_filter = st.selectbox(
+                "Color by hazard type",
+                options=["total", "tropical_cyclone", "severe_storm", "drought", 
+                         "flooding", "wildfire", "winter_storm", "freeze"],
+                format_func=lambda x: x.replace("_", " ").title() if x != "total" else "All Hazards Combined",
+                key="choropleth_hazard"
+            )
+            
+            fig_choro = create_choropleth(
+                highlight_profile=profile_name,
+                color_by=hazard_filter,
+            )
+            st.plotly_chart(fig_choro, use_container_width=True)
+            
+            # Event frequency acceleration
+            st.markdown("---")
+            st.subheader("Event Frequency Acceleration")
+            fig_freq = create_frequency_trend()
+            st.plotly_chart(fig_freq, use_container_width=True)
+            
+            st.warning(
+                "**2.7× increase** in average annual billion-dollar disaster frequency "
+                "from the 1980s (3.3/year) to 2020–2024 (23.0/year). This acceleration "
+                "is the fundamental driver for market-based financing alternatives."
+            )
+        
+        with tab6:
             st.subheader("Simulation Time Series")
             
             # Create time series from year summaries
@@ -461,52 +616,7 @@ def main():
                 )
                 st.plotly_chart(fig_time, use_container_width=True)
         
-        with tab4:
-            st.subheader("Funding Waterfall Structure")
-            
-            # Create waterfall visualization
-            fig_waterfall = go.Figure()
-            
-            layers = [
-                ("Municipal Reserves", 0, 50, "#3b82f6"),
-                ("State Risk Pool", 50, 250, "#8b5cf6"),
-                ("Catastrophe Bonds", 250, 1000, "#06b6d4"),
-                ("Reinsurance Markets", 1000, 5000, "#f59e0b"),
-                ("Federal Backstop", 5000, 10000, "#ef4444"),
-            ]
-            
-            for name, floor, ceiling, color in layers:
-                fig_waterfall.add_trace(go.Bar(
-                    name=name,
-                    x=[name],
-                    y=[ceiling - floor],
-                    base=[floor],
-                    marker_color=color,
-                    text=[f"${floor}M - ${ceiling}M"],
-                    textposition="inside",
-                    hovertemplate=f"<b>{name}</b><br>Range: ${floor}M - ${ceiling}M<extra></extra>"
-                ))
-            
-            fig_waterfall.update_layout(
-                title="Five-Layer Protection Structure",
-                xaxis_title="Layer",
-                yaxis_title="Coverage Range ($M)",
-                yaxis_type="log",
-                showlegend=False,
-                height=500
-            )
-            
-            st.plotly_chart(fig_waterfall, use_container_width=True)
-            
-            st.info("""
-            **Reading the Waterfall:**
-            - Each layer activates when losses exceed its floor threshold
-            - Parametric triggers (cat bonds) can disburse within 72 hours
-            - Traditional FEMA processes average 21 days
-            - The market-based model fills the "vast middle ground" between local reserves and federal appropriations
-            """)
-        
-        with tab5:
+        with tab7:
             st.subheader("NOAA NCEI Historical Data (1980-2024)")
             
             st.markdown("""
