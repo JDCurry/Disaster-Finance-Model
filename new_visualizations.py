@@ -308,69 +308,18 @@ FEMA_TIMING = [
 ]
 
 
-def create_disbursement_timeline(loss_millions: float = 2000) -> go.Figure:
+def create_disbursement_timeline(loss_millions: float = 2000) -> tuple:
     """
-    Create Gantt-style timeline comparing disbursement speed.
+    Create two separate Gantt-style timeline charts for market vs FEMA models.
 
     Args:
         loss_millions: Total event loss in millions USD
 
     Returns:
-        Plotly Figure
+        Tuple of (market_figure, fema_figure, market_wavg, fema_wavg)
     """
     market_flows = _calc_layer_flows(loss_millions, MARKET_TIMING)
     fema_flows = _calc_layer_flows(loss_millions, FEMA_TIMING)
-
-    fig = go.Figure()
-
-    # Build bars: each bar starts at day 0, ends at its disbursement day
-    # Market model bars (top section)
-    all_labels = []
-    all_starts = []
-    all_ends = []
-    all_colors = []
-    all_amounts = []
-    all_models = []
-
-    for f in reversed(market_flows):
-        all_labels.append(f["name"])
-        all_starts.append(0)
-        all_ends.append(f["days"])
-        all_colors.append(f["color"])
-        all_amounts.append(f["amount"])
-        all_models.append("Market")
-
-    # Spacer
-    all_labels.append("")
-    all_starts.append(0)
-    all_ends.append(0)
-    all_colors.append("rgba(0,0,0,0)")
-    all_amounts.append(0)
-    all_models.append("")
-
-    for f in reversed(fema_flows):
-        all_labels.append(f["name"])
-        all_starts.append(0)
-        all_ends.append(f["days"])
-        all_colors.append(f["color"])
-        all_amounts.append(f["amount"])
-        all_models.append("FEMA")
-
-    # Use horizontal bar chart
-    fig.add_trace(go.Bar(
-        y=[f"{'⬡ ' if m == 'Market' else '◼ ' if m == 'FEMA' else ''}{l}" for l, m in zip(all_labels, all_models)],
-        x=all_ends,
-        orientation="h",
-        marker_color=all_colors,
-        text=[f"{format_cost(a)} — Day {e}" if a > 0 else "" for a, e in zip(all_amounts, all_ends)],
-        textposition="inside",
-        textfont=dict(color="white", size=11),
-        hovertemplate=(
-            "<b>%{y}</b><br>"
-            "Disbursement: Day %{x}<br>"
-            "<extra></extra>"
-        ),
-    ))
 
     # Calculate weighted averages
     m_total = sum(f["amount"] for f in market_flows)
@@ -378,42 +327,84 @@ def create_disbursement_timeline(loss_millions: float = 2000) -> go.Figure:
     f_total = sum(f["amount"] for f in fema_flows)
     f_wavg = sum(f["amount"] * f["days"] for f in fema_flows) / f_total if f_total > 0 else 0
 
-    # Add vertical line annotations for weighted averages
-    fig.add_vline(x=m_wavg, line_dash="dash", line_color="#1D9E75", line_width=1.5,
-                  annotation_text=f"Market avg: {m_wavg:.1f}d", annotation_position="top")
-    fig.add_vline(x=f_wavg, line_dash="dash", line_color="#E24B4A", line_width=1.5,
-                  annotation_text=f"FEMA avg: {f_wavg:.1f}d", annotation_position="bottom left")
+    max_day = 28
 
-    # Highlight the gap zone (day 3 to day 21) for FEMA
+    # --- Traditional FEMA model chart ---
+    fig_fema = go.Figure()
+    for f in reversed(fema_flows):
+        fig_fema.add_trace(go.Bar(
+            y=[f["name"]],
+            x=[f["days"]],
+            orientation="h",
+            marker_color=f["color"],
+            text=[f"{format_cost(f['amount'])} — Day {f['days']}"],
+            textposition="inside",
+            textfont=dict(color="white", size=12),
+            hovertemplate=f"<b>{f['name']}</b><br>Amount: {format_cost(f['amount'])}<br>Day {f['days']}<extra></extra>",
+            showlegend=False,
+        ))
+
+    fig_fema.add_vline(
+        x=f_wavg, line_dash="dash", line_color="#E24B4A", line_width=1.5,
+        annotation_text=f"Weighted avg: {f_wavg:.1f} days",
+        annotation_position="top",
+        annotation_font=dict(size=11, color="#E24B4A"),
+    )
+
     if loss_millions > 50:
-        fig.add_vrect(
+        fig_fema.add_vrect(
             x0=3, x1=21,
-            fillcolor="rgba(226, 75, 74, 0.08)",
-            line_width=0,
-            annotation_text="18-day gap with no<br>middle-layer coverage",
+            fillcolor="rgba(226, 75, 74, 0.08)", line_width=0,
+            annotation_text="18-day gap: no middle-layer coverage",
             annotation_position="top",
             annotation_font=dict(size=11, color="#E24B4A"),
         )
 
-    fig.update_layout(
-        title=dict(
-            text=f"Disbursement Timeline: {format_cost(loss_millions)} Event",
-            font=dict(size=16),
-        ),
-        xaxis=dict(
-            title="Days to Disburse",
-            range=[0, 28],
-            dtick=3,
-            gridcolor="rgba(128,128,128,0.15)",
-        ),
+    fig_fema.update_layout(
+        title=dict(text="Traditional FEMA model", font=dict(size=14)),
+        xaxis=dict(title="Days to disburse", range=[0, max_day], dtick=3,
+                   gridcolor="rgba(128,128,128,0.15)"),
         yaxis=dict(title=""),
-        height=max(350, 50 * (len(all_labels))),
+        height=180,
         showlegend=False,
-        margin=dict(l=10, r=10, t=60, b=40),
-        bargap=0.25,
+        margin=dict(l=10, r=10, t=40, b=40),
+        bargap=0.3,
     )
 
-    return fig
+    # --- Market-based model chart ---
+    fig_market = go.Figure()
+    for f in reversed(market_flows):
+        fig_market.add_trace(go.Bar(
+            y=[f["name"]],
+            x=[f["days"]],
+            orientation="h",
+            marker_color=f["color"],
+            text=[f"{format_cost(f['amount'])} — Day {f['days']}"],
+            textposition="inside",
+            textfont=dict(color="white", size=12),
+            hovertemplate=f"<b>{f['name']}</b><br>Amount: {format_cost(f['amount'])}<br>Day {f['days']}<extra></extra>",
+            showlegend=False,
+        ))
+
+    fig_market.add_vline(
+        x=m_wavg, line_dash="dash", line_color="#1D9E75", line_width=1.5,
+        annotation_text=f"Weighted avg: {m_wavg:.1f} days",
+        annotation_position="top",
+        annotation_font=dict(size=11, color="#1D9E75"),
+    )
+
+    fig_market.update_layout(
+        title=dict(text="Market-based model", font=dict(size=14)),
+        xaxis=dict(title="Days to disburse", range=[0, max_day], dtick=3,
+                   gridcolor="rgba(128,128,128,0.15)"),
+        yaxis=dict(title=""),
+        height=260,
+        showlegend=False,
+        margin=dict(l=10, r=10, t=40, b=40),
+        bargap=0.3,
+    )
+
+    return fig_fema, fig_market, m_wavg, f_wavg
 
 
 # ──────────────────────────────────────────────────────────────────────

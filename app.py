@@ -45,17 +45,26 @@ from new_visualizations import (
 
 def format_currency(value_millions: float, decimals: int = 1) -> str:
     """
-    Format currency values with appropriate B/M/K notation.
+    Format currency values with appropriate T/B/M/K notation.
     
     Args:
         value_millions: Value in millions USD
         decimals: Number of decimal places (default 1)
     
     Returns:
-        Formatted string like "$1.2B" or "$456M"
+        Formatted string like "$1.2T", "$456B", or "$50M"
     """
-    if value_millions >= 1000:
-        # Convert to billions
+    if value_millions >= 1_000_000:
+        # Trillions
+        trillions = value_millions / 1_000_000
+        if trillions >= 100:
+            return f"${trillions:,.0f}T"
+        elif trillions >= 10:
+            return f"${trillions:,.1f}T"
+        else:
+            return f"${trillions:,.{decimals}f}T"
+    elif value_millions >= 1000:
+        # Billions
         billions = value_millions / 1000
         if billions >= 100:
             return f"${billions:,.0f}B"
@@ -64,7 +73,7 @@ def format_currency(value_millions: float, decimals: int = 1) -> str:
         else:
             return f"${billions:,.{decimals}f}B"
     elif value_millions >= 1:
-        # Keep in millions
+        # Millions
         if value_millions >= 100:
             return f"${value_millions:,.0f}M"
         elif value_millions >= 10:
@@ -135,13 +144,37 @@ st.markdown("""
 
 
 def main():
-    # Header
-    st.header("Disaster Finance Model")
-    st.markdown(
-        '<p class="sub-header">Monte Carlo simulation comparing market-based disaster financing '
-        'vs. traditional FEMA funding</p>', 
-        unsafe_allow_html=True
-    )
+    # Header with logo and competition branding
+    logo_col, title_col, badge_col = st.columns([1, 4, 1.5])
+    
+    with logo_col:
+        try:
+            st.image("logo-dark.png", width=140)
+        except Exception:
+            st.markdown("**Pierce College**")
+    
+    with title_col:
+        st.header("Disaster Finance Model")
+        st.markdown(
+            '<p class="sub-header">Monte Carlo simulation comparing market-based disaster financing '
+            'vs. traditional FEMA funding</p>', 
+            unsafe_allow_html=True
+        )
+    
+    with badge_col:
+        st.markdown("""
+        <div style="text-align: right; padding-top: 0.5rem;">
+            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                IAEM 2026 · Undergraduate Division
+            </div>
+            <div style="font-size: 0.85rem; color: #aaa; margin-top: 2px;">
+                Joshua Curry
+            </div>
+            <div style="font-size: 0.7rem; color: #666; margin-top: 2px;">
+                Resilience Analytics Lab, LLC
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Reference to paper
     with st.expander("About This Model", expanded=False):
@@ -505,15 +538,20 @@ def main():
                 help="Drag to see timing for different event sizes"
             )
             
-            fig_timeline = create_disbursement_timeline(loss_millions=timeline_loss)
-            st.plotly_chart(fig_timeline, use_container_width=True)
+            fig_fema_tl, fig_market_tl, market_wavg, fema_wavg = create_disbursement_timeline(
+                loss_millions=timeline_loss
+            )
+            
+            st.plotly_chart(fig_fema_tl, use_container_width=True)
+            st.plotly_chart(fig_market_tl, use_container_width=True)
             
             # Key timing metrics
             st.markdown("---")
             tcol1, tcol2, tcol3 = st.columns(3)
+            time_saved = max(0, fema_wavg - market_wavg)
             tcol1.metric("Cat Bond Trigger", "72 hours", help="Parametric triggers disburse within 72 hours of threshold breach")
             tcol2.metric("FEMA PA Average", "21 days", help="Average FEMA Public Assistance disbursement timeline")
-            tcol3.metric("Time Saved", f"~{max(0, 21 - 3):.0f} days", delta="Per event (lower layers)", help="Days saved on lower-layer funding through market mechanisms")
+            tcol3.metric("Time Saved", f"~{time_saved:.0f} days", delta=f"{time_saved:.1f} days faster", help="Weighted-average improvement for this event size")
         
         with tab5:
             st.subheader("Geographic Risk Map")
