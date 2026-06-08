@@ -246,6 +246,9 @@ def main():
     #     help="Set to same value to reproduce results"
     # )
     
+    # Default seed for reproducibility
+    seed = 42
+    
     # Layer customization
     st.sidebar.markdown("---")
     st.sidebar.header("Layer Configuration")
