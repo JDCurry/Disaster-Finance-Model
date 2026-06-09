@@ -170,9 +170,6 @@ def main():
             <div style="font-size: 0.85rem; color: #aaa; margin-top: 2px;">
                 Joshua Curry
             </div>
-            <div style="font-size: 0.7rem; color: #666; margin-top: 2px;">
-                Resilience Analytics Lab, LLC
-            </div>
         </div>
         """, unsafe_allow_html=True)
     
