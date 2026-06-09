@@ -162,16 +162,7 @@ def main():
         )
     
     with badge_col:
-        st.markdown("""
-        <div style="text-align: right; padding-top: 0.5rem;">
-            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
-                IAEM 2026 · Undergraduate Division
-            </div>
-            <div style="font-size: 0.85rem; color: #aaa; margin-top: 2px;">
-                Joshua Curry
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        pass
     
     # Reference to paper
     with st.expander("About This Model", expanded=False):
