@@ -576,9 +576,10 @@ def main():
             st.plotly_chart(fig_freq, use_container_width=True)
             
             st.warning(
-                "**2.7× increase** in average annual billion-dollar disaster frequency "
-                "from the 1980s (3.3/year) to 2020–2024 (23.0/year). This acceleration "
-                "is the fundamental driver for market-based financing alternatives."
+                "**Roughly 2.4× increase** in average annual billion-dollar disaster "
+                "frequency, from 8.5/year (1980–2023) to 20.4/year over the recent "
+                "five-year window (Curry et al., 2025). This acceleration is the "
+                "fundamental driver for market-based financing alternatives."
             )
         
         with tab6:

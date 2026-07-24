@@ -8,6 +8,11 @@ Data source: https://www.ncei.noaa.gov/access/billions/
 Reference period: 1980-2024
 Total events: 403 billion-dollar disasters
 Cumulative cost: $2.915+ trillion (CPI-adjusted)
+Historical average: 8.5 events/year (1980-2023)
+Recent five-year average: 20.4 events/year
+
+Figures follow the published paper (Curry et al., 2025), which cites the
+NCEI billion-dollar disaster record as of its writing.
 
 Note: NOAA ceased support for this product in May 2025, but historical data
 remains authoritative and archived.
@@ -176,8 +181,8 @@ NOAA_SUMMARY_STATS = {
     "total_events": 403,
     "total_cost_billions": 2915,  # $2.915 trillion cumulative
     "years_covered": 45,  # 1980-2024
-    "average_events_per_year_1980_2023": 9.0,
-    "average_events_per_year_2020_2024": 23.0,
+    "average_events_per_year_1980_2023": 8.5,
+    "average_events_per_year_2020_2024": 20.4,
     "average_cost_per_year_billions": 64.8,
     "average_cost_per_year_5yr_billions": 149.3,  # 2020-2024
     
@@ -334,8 +339,8 @@ class NOAADataCalibrator:
         """
         Calculate trend multiplier for event frequency.
         
-        Based on observed increase from 8.5 events/year (historical) to
-        23.0 events/year (2020-2024).
+        Based on observed increase from 8.5 events/year (1980-2023) to
+        20.4 events/year (recent five-year average).
         
         Args:
             base_year: Starting year for baseline
@@ -350,7 +355,7 @@ class NOAADataCalibrator:
             self.summary["average_events_per_year_1980_2023"]
         )
         
-        # Approximately 2.5x increase over 40 years
+        # Approximately 2.4x increase over 40 years (20.4 / 8.5)
         # Assume exponential growth: multiplier = base^years
         years_elapsed = target_year - base_year
         annual_growth_rate = (recent_to_historical ** (1 / 40)) - 1

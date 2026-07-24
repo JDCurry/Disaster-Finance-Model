@@ -547,12 +547,14 @@ def create_exceedance_curve(
 def create_frequency_trend() -> go.Figure:
     """
     Create event frequency acceleration chart showing the surge
-    from ~8 events/year to 23+/year.
+    from ~3 events/year in the 1980s to 20.4/year in the recent
+    five-year window (Curry et al., 2025).
     """
     decades = ["1980s", "1990s", "2000s", "2010s", "2020–24"]
-    events = [33, 57, 67, 131, 115]
+    # Per-decade averages; recent five-year average is the paper's 20.4/yr.
+    avg_per_year = [3.3, 5.7, 6.7, 13.1, 20.4]
+    events = [33, 57, 67, 131, 102]  # implied counts (avg x years)
     years_in_period = [10, 10, 10, 10, 5]
-    avg_per_year = [e / y for e, y in zip(events, years_in_period)]
     colors = ["#B5D4F4", "#85B7EB", "#378ADD", "#185FA5", "#E24B4A"]
 
     fig = go.Figure()

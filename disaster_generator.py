@@ -7,8 +7,8 @@ historical NOAA/NCEI data on billion-dollar disasters.
 Key parameters from NOAA NCEI (1980-2024):
 - Total events: 403 billion-dollar disasters
 - Cumulative cost: $2.915 trillion (CPI-adjusted)
-- Historical average: 9.0 events/year (1980-2023)
-- Recent surge: 23.0 events/year (2020-2024)
+- Historical average: 8.5 events/year (1980-2023)
+- Recent surge: 20.4 events/year (recent five-year average)
 - Tropical cyclones: $1.54T total (53% of all costs)
 - Severe storms: Most frequent (203 events, 50% of total)
 
@@ -277,7 +277,8 @@ class DisasterEventGenerator:
 
 
 # Preset regional profiles calibrated to NOAA NCEI state-level cost data (1980-2024)
-# Frequencies based on 23.0 events/year national average (2020-2024 trend)
+# Regional frequencies are set per-profile below; the national recent-trend
+# average is 20.4 events/year (Curry et al., 2025)
 PRESET_PROFILES = {
     "gulf_coast": RegionalRiskProfile(
         name="Gulf Coast (Hurricane Zone)",
